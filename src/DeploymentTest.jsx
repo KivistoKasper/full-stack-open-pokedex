@@ -1,10 +1,9 @@
 import React from 'react'
 
-const DeploymentTest = () => {
+const DeploymentTest = ({ version }) => {
   return (
-    <div>The current version is 1</div>
+    <div className="version">The current version is: {version.toString()}</div>
   )
 }
-
 
 export default DeploymentTest
