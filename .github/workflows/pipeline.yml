@@ -24,7 +24,7 @@ jobs:
 
       - name: Build 
         run: npm run build
-        
+
       - name: Test
         run: npm run test
           
@@ -34,10 +34,11 @@ jobs:
 
   tag_release:
     needs: [simple_deployment_pipeline]
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Bump version and push tag
-        if: ${{ github.event_name == 'push' }}
         uses: anothrNick/github-tag-action@1.75.0
         env:
           DEFAULT_BUMP: patch
