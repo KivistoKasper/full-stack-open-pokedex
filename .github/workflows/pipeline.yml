@@ -11,11 +11,18 @@ on:
 jobs:
   simple_deployment_pipeline:
     runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check_skip.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Check for #skip in commit
+        id: check_skip
+        run: echo "skip=${{ contains(github.event.head_commit.message || github.event.pull_request.body, '#skip') }}" >> $GITHUB_OUTPUT
+        
       - name: install dependencies
         run: npm install
         
@@ -29,12 +36,12 @@ jobs:
         run: npm run test
           
       - name: Trigger deployment
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && steps.check_skip.outputs.skip == 'false' }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
 
   tag_release:
     needs: [simple_deployment_pipeline]
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' && needs.simple_deployment_pipeline.outputs.skip == 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
