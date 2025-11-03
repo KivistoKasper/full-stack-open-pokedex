@@ -57,15 +57,15 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
       - name: Build Failed
-        uses: rjstone/discord-webhook-notify@v2
+        uses: sarisia/actions-status-discord@v1
         if: failure()
         with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
           username: GitHub
-          avatarUrl: https://github.com/fluidicon.png
-          text: "Build failed!"
-          severity: error
-          color: '#f20303ff'
+          avatar_url: https://github.com/fluidicon.png
+          title: "Build failed!"
+          status: Failure
+          color: '#fa0000ff'
 
   tag_release:
     needs: [simple_deployment_pipeline]
