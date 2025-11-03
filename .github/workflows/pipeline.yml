@@ -80,12 +80,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: New version deployed!
-        uses: rjstone/discord-webhook-notify@v2
+        uses: sarisia/actions-status-discord@v1
         if: success()
         with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
           username: GitHub
-          avatarUrl: https://github.com/fluidicon.png
-          text: "New version deployed!"
-          severity: info
+          avatar_url: https://github.com/fluidicon.png
+          title: "New version deployed!"
+          status: Success
           color: '#1ff203ff'
