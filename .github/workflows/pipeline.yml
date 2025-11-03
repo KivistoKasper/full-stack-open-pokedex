@@ -22,7 +22,17 @@ jobs:
       - name: Check for #skip in commit
         id: check_skip
         run: echo "skip=${{ contains(github.event.head_commit.message || github.event.pull_request.body, '#skip') }}" >> $GITHUB_OUTPUT
-        
+      
+      - name: Check for #fail in commit
+        id: check_fail
+        run: echo "fail=${{ contains(github.event.head_commit.message || github.event.pull_request.body, '#fail') }}" >> $GITHUB_OUTPUT
+      
+      - name: Make build fail on purpose
+        if: ${{ steps.check_fail.outputs.fail == 'true' }}
+        run: |
+          echo "Forcing failure"
+          exit 1
+
       - name: install dependencies
         run: npm install
         
@@ -39,16 +49,23 @@ jobs:
         if: ${{ github.event_name == 'push' && steps.check_skip.outputs.skip == 'false' }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
       
+      - name: Debug webhook presence
+        if: failure()
+        run: |
+          echo "Webhook length: ${#DISCORD_WEBHOOK}"
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
       - name: Build Failed
-        uses: rjstone/discord-webhook-notify@v2
+        uses: sarisia/actions-status-discord@v1
         if: failure()
         with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
           username: GitHub
-          avatarUrl: https://github.com/fluidicon.png
-          text: Build failed!
-          severity: error
-          color: '#f20303ff'
+          avatar_url: https://github.com/fluidicon.png
+          title: "Build failed!"
+          status: Failure
+          color: '#fa0000ff'
 
   tag_release:
     needs: [simple_deployment_pipeline]
@@ -63,12 +80,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: New version deployed!
-        uses: rjstone/discord-webhook-notify@v2
+        uses: sarisia/actions-status-discord@v1
         if: success()
         with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
           username: GitHub
-          avatarUrl: https://github.com/fluidicon.png
-          text: New version deployed!
-          severity: info
+          avatar_url: https://github.com/fluidicon.png
+          title: "New version deployed!"
+          status: Success
           color: '#1ff203ff'
