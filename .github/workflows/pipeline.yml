@@ -22,7 +22,17 @@ jobs:
       - name: Check for #skip in commit
         id: check_skip
         run: echo "skip=${{ contains(github.event.head_commit.message || github.event.pull_request.body, '#skip') }}" >> $GITHUB_OUTPUT
-        
+      
+      - name: Check for #fail in commit
+        id: check_fail
+        run: echo "fail=${{ contains(github.event.head_commit.message || github.event.pull_request.body, '#fail') }}" >> $GITHUB_OUTPUT
+      
+      - name: Make build fail on purpose
+        if: ${{ steps.check_fail.outputs.fail == 'true' }}
+        run: |
+          echo "Forcing failure"
+          exit 1
+
       - name: install dependencies
         run: npm install
         
@@ -39,6 +49,12 @@ jobs:
         if: ${{ github.event_name == 'push' && steps.check_skip.outputs.skip == 'false' }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
       
+      - name: Debug webhook presence
+        run: |
+          echo "Webhook length: ${#DISCORD_WEBHOOK}"
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
       - name: Build Failed
         uses: rjstone/discord-webhook-notify@v2
         if: failure()
@@ -46,7 +62,7 @@ jobs:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           username: GitHub
           avatarUrl: https://github.com/fluidicon.png
-          text: Build failed!
+          text: "Build failed!"
           severity: error
           color: '#f20303ff'
 
@@ -69,6 +85,6 @@ jobs:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           username: GitHub
           avatarUrl: https://github.com/fluidicon.png
-          text: New version deployed!
+          text: "New version deployed!"
           severity: info
           color: '#1ff203ff'
