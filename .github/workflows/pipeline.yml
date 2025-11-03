@@ -38,6 +38,17 @@ jobs:
       - name: Trigger deployment
         if: ${{ github.event_name == 'push' && steps.check_skip.outputs.skip == 'false' }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
+      
+      - name: Build Failed
+        uses: rjstone/discord-webhook-notify@v2
+        if: failure()
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          username: GitHub
+          avatarUrl: https://github.com/fluidicon.png
+          text: Build failed!
+          severity: error
+          color: '#f20303ff'
 
   tag_release:
     needs: [simple_deployment_pipeline]
@@ -50,3 +61,14 @@ jobs:
         env:
           DEFAULT_BUMP: patch
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: New version deployed!
+        uses: rjstone/discord-webhook-notify@v2
+        if: success()
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          username: GitHub
+          avatarUrl: https://github.com/fluidicon.png
+          text: New version deployed!
+          severity: info
+          color: '#1ff203ff'
